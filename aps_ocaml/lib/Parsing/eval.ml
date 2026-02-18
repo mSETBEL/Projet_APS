@@ -134,8 +134,8 @@ let eval_stat env outFlux s =
 let rec eval_cmds env outFlux cmds =
   match cmds with
   | ASTStat s -> let finalOutFlux = eval_stat env outFlux s in List.rev finalOutFlux (* on l'inverse à la fin*)
-  | ASTDef (d, c::_) -> let new_env = eval_def env d in eval_cmds new_env outFlux c
-  | _ -> failwith "Unexpected end of commands"
+  | ASTDef (d, c) -> let new_env = eval_def env d in eval_cmds new_env outFlux c
+ 
 
 
 

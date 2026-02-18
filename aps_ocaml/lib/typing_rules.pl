@@ -32,7 +32,7 @@ type_cmds(G,def(D,CS),void) :- type_def(G,D,G1), type_cmds(G1,CS,void). %defs
 %Définitions
 type_def(G,const(X,T,E),[(X,T)|G]) :- type_expr(G,E,T). %const
 type_def(G,fun(X,T,ARGS,E),[(X,arrow(TARGS,T))|G]) :- add_args_ctx(G,ARGS,G1), build_types(ARGS,TARGS), type_expr(G1,E,T). %fun
-type_def(G,fun_rec(X,T,ARGS,E),[(X,arrow(TARGS,T))|G]) :- add_args_ctx(G,ARGS,G1), build_types(ARGS,TARGS), add_args_ctx(G1,[(X,arrow(TARGS,T))],G2), type_expr(G2,E,T). %fun_rec
+type_def(G,funrec(X,T,ARGS,E),[(X,arrow(TARGS,T))|G]) :- build_types(ARGS,TARGS), add_args_ctx(G,[arg(X,arrow(TARGS,T))],G1), add_args_ctx(G1,ARGS,G2), type_expr(G2,E,T). %fun_rec
 
 %instructions
 type_stat(G, echo(E), void) :- type_expr(G, E, int). %echo
@@ -41,7 +41,7 @@ type_stat(G, echo(E), void) :- type_expr(G, E, int). %echo
 %expression
 type_expr(_,num(_),int). %num
 type_expr(G,ident(X),T) :-  find(G,X,T). %id
-type_expr(G, if(E1, E2, E3), t) :- type_expr(G,E1, bool), type_expr(G,E2,T), type_expr(G,E3,T). %if
+type_expr(G, if(E1, E2, E3), T) :- type_expr(G,E1, bool), type_expr(G,E2,T), type_expr(G,E3,T). %if
 type_expr(G, and(E1, E2), bool) :- type_expr(G,E1,bool), type_expr(G,E2,bool). %and
 type_expr(G, or(E1, E2), bool) :- type_expr(G,E1,bool), type_expr(G,E2,bool). %or
 type_expr(G, app(E,ENS), T) :-  type_expr(G,E,arrow(TENS,T)), type_exprs(G,ENS,TENS). %app
@@ -52,8 +52,8 @@ type_exprs(G,[E|ES],[T|TS]) :- type_expr(G,E,T), type_exprs(G,ES,TS).
 
 
 add_args_ctx(G,[],G).
-add_args_ctx(G,[(X,T)|ARGS],G1) :- add_args_ctx([(X,T)|G],ARGS,G1).
+add_args_ctx(G,[arg(X,T)|ARGS],G1) :- add_args_ctx([(X,T)|G],ARGS,G1).
 
 
 build_types([],_).
-build_types([(_,T)|ARGS], TARGS) :- build_types(ARGS,[T|TARGS]).
+build_types([arg(_,T)|ARGS], TARGS) :- build_types(ARGS,[T|TARGS]).

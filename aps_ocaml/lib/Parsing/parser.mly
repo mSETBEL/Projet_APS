@@ -35,8 +35,7 @@ open Ast
 
 %type <Ast.expr> expr
 %type <Ast.expr list> exprs
-%type <Ast.cmd list> cmds
-%type <Ast.cmd list> prog
+%type <Ast.cmds> prog
 
 %start prog
 
@@ -45,8 +44,8 @@ prog: LBRA cmds RBRA    { $2 }
 ;
 
 cmds:
-  stat                  { [ASTStat $1] }
-| def SEMICOLON cmds    { [ASTDef($1, $3)] }
+  stat                  { ASTStat $1 }
+| def SEMICOLON cmds    { ASTDef($1, $3) }
 ;
 
 stat:

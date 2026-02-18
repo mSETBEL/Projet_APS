@@ -44,12 +44,11 @@ let pp_stat fmt s =
   ASTEcho e -> fprintf fmt "echo(%a)" pp_expr e
 
 
-let rec pp_cmd fmt c =
+let rec pp_cmds fmt c =
   match c with
   ASTStat s -> fprintf fmt "stat(%a)" pp_stat s
   |ASTDef(d, cs) -> fprintf fmt "def(%a,%a)" pp_def d pp_cmds cs
 
-and pp_cmds fmt cs = pp_lst_cma pp_cmd fmt cs
 
 and pp_def fmt s =
   match s with

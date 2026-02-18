@@ -37,6 +37,6 @@ type def =
   | ASTFun of string * typ * arg list * expr
   | ASTFunRec of string * typ * arg list * expr
 
-type cmd =
+type cmds =
     ASTStat of stat
-  | ASTDef of def * cmd list
+  | ASTDef of def * cmds
