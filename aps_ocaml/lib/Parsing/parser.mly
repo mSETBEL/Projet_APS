@@ -22,7 +22,13 @@ open Ast
 %token CONST
 %token FUN
 %token REC
+%token VAR
+%token PROC
 %token ECHO
+%token SET
+%token IFS
+%token WHILE
+%token CALL
 %token IF
 %token AND
 %token OR
@@ -40,22 +46,32 @@ open Ast
 %start prog
 
 %%
-prog: LBRA cmds RBRA    { $2 }
+prog: block { $1 }
+
+block: LBRA cmds RBRA    { $2 }
 ;
 
 cmds:
-  stat                  { ASTStat $1 }
+  stat                  { ASTEnd $1 }
 | def SEMICOLON cmds    { ASTDef($1, $3) }
+| stat SEMICOLON cmds   { ASTStat($1, $3) }
 ;
 
 stat:
   ECHO expr             { ASTEcho($2) }
+  | SET IDENT expr       { ASTSet($2, $3) }
+  | IFS expr block block         { ASTIfS($2, $3, $4) } 
+  | WHILE expr block              { ASTWhile($2, $3) }
+  | CALL IDENT exprs              { ASTCall($2, $3) }
 ;
 
 def:
   CONST IDENT typ expr  { ASTConst($2, $3, $4) }
 | FUN IDENT typ LBRA args RBRA expr  { ASTFun($2, $3, $5, $7) }
 | FUN REC IDENT typ LBRA args RBRA expr { ASTFunRec($3, $4, $6, $8) }
+| VAR IDENT typ { ASTVar($2, $3) }
+| PROC IDENT LBRA args RBRA block { ASTProc($2, $4, $6) }
+| PROC REC IDENT LBRA args RBRA block { ASTProcRec($3, $5, $7) }
 ;
 typ:
   BOOL { ASTBool }

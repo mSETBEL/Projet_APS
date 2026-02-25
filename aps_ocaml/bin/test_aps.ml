@@ -1,7 +1,7 @@
 open Aps_syntax.Manip_sys
 open Aps_syntax.PrologTerm
 
-let l_test_0 = [(testfile_name 0 6, "OK")]
+let l_test_0 = [(testfile_name 1 1, "OK")]
 
 
 
@@ -26,7 +26,7 @@ List.fold_right
 ) l_test ()
 
 let _ =
-  Format.printf "========== Tests de APS 0 ==========\n";
+  Format.printf "========== Tests de APS 1 ==========\n";
   Format.printf "- Test de PrologTerm\n";
   test_prologTerm (fst (List.split l_test_0 ));
   print_endline "- Test du typeur\n";
