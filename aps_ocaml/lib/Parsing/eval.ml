@@ -1,5 +1,3 @@
-(*
-
 open Ast
 
 (* ========================================================================== *)
@@ -16,12 +14,28 @@ type value =
     Z of int
   | F of closure
   | FR of recClosure
+  | A of address
+  | P of proClosure
+  | PR of recProClosure
 and closure = expr * string list * env
-and recClosure = expr * string * string list * env 
+and recClosure = expr * string * string list * env
+and proClosure = cmds * string list * env 
+and recProClosure = cmds * string * string list * env
+and address = int
 and env = (string * value) list
 
 type outFlux = int list
 
+
+let alloc mem =
+  let new_addr = List.length mem in
+  (new_addr, (new_addr, Z 0) :: mem)
+
+let update mem a v =
+  List.map (fun (addr, value) -> if addr = a then (addr, v) else (addr, value)) mem
+
+let inDomain mem a =
+  List.exists (fun (addr, _) -> addr = a) mem
 
 let pi0 op =
   match op with
@@ -67,85 +81,122 @@ let rec ajout_list_env env args vals =
 
 
 (* expressions *)
-let rec eval_expr env exp =
+let rec eval_expr env mem exp =
   match exp with
 
   | ASTNum n -> Z n 
-  | ASTId x -> get_value env x
+
+  | ASTId x -> (match get_value env x with
+      | A a -> Z a
+      | v -> v)
+  
 
   | ASTApp (ASTId "true", []) -> Z 1
   | ASTApp (ASTId "false", []) -> Z 0
   
-  | ASTApp (ASTId "not", [e]) -> (match eval_expr env e with
+  | ASTApp (ASTId "not", [e]) -> (match eval_expr env mem e with
       | Z n -> Z (pi1("not" , n)) 
       | _ -> failwith "Expected an integer for not operator"
     )
   | ASTApp (ASTId x, [e1; e2]) when (x = "eq" || x = "lt" || x = "add" || x = "sub" ||  x = "mul" ||  x = "div") -> 
-      (match (eval_expr env e1, eval_expr env e2) with
+      (match (eval_expr env mem e1, eval_expr env mem e2) with
       | (Z n1, Z n2) -> Z (pi2(x, n1, n2)) 
       | _ -> failwith ("Expected integers for "^x^" operator")
     )
-  | ASTAnd (e1, e2) -> (match eval_expr env e1 with
-      | Z 1 -> eval_expr env e2
+  | ASTAnd (e1, e2) -> (match eval_expr env mem e1 with
+      | Z 1 -> eval_expr env mem e2
       | Z 0 -> Z 0
       | _ -> failwith "Expected boolean values for and operator")
-  | ASTOr (e1, e2) -> (match eval_expr env e1 with
+  | ASTOr (e1, e2) -> (match eval_expr env mem e1 with
       | Z 1 -> Z 1
-      | Z 0 -> eval_expr env e2
+      | Z 0 -> eval_expr env mem e2
       | _ -> failwith "Expected boolean values for or operator")
-  | ASTIf (e1, e2, e3) -> (match eval_expr env e1 with
-      | Z 1 -> eval_expr env e2
-      | Z 0 -> eval_expr env e3
+  | ASTIf (e1, e2, e3) -> (match eval_expr env mem e1 with
+      | Z 1 -> eval_expr env mem e2
+      | Z 0 -> eval_expr env mem e3
       | _ -> failwith "Expected a boolean value for if condition")
   | ASTAbs (args, e) -> F (e, build_types args, env)
-  | ASTApp (e, exprs) -> (match eval_expr env e with
-      | F (e', args, env') -> let vals = eval_exprs env exprs in
+
+  | ASTApp (e, exprs) -> (match eval_expr env mem e with
+      | F (e', args, env') -> let vals = eval_exprs env mem exprs in
               let new_env = ajout_list_env env' args vals in
-              eval_expr new_env e' 
-      | FR (e', x, args, env') ->  let vals = eval_exprs env exprs in
+              eval_expr new_env mem e' 
+      | FR (e', x, args, env') ->  let vals = eval_exprs env mem exprs in
               let new_env = ajout_list_env ((x, FR (e', x, args, env')) :: env') args vals in
-              eval_expr new_env e'
+              eval_expr new_env mem e'
       | _ -> failwith "Expected a function in application")
 
-and eval_exprs env exprs =
+and eval_exprs env mem exprs =
   match exprs with
   | [] -> []
-  | e :: rest -> eval_expr env e :: eval_exprs env rest
+  | e :: rest -> eval_expr env mem e :: eval_exprs env mem rest
 
 (* definitions *)
-let eval_def env def =
+let eval_def env mem def =
   match def with
-  | ASTConst (x, _, e) -> let v = eval_expr env e in
-      (x, v) :: env
+  | ASTConst (x, _, e) -> let v = eval_expr env mem e in
+      ((x, v) :: env , mem)
   | ASTFun (x, _, args, e) -> let f = F (e, build_types args, env) in
-      (x, f) :: env
+      ((x, f) :: env , mem)
   | ASTFunRec (x, _, args, e) -> let fr = FR (e, x, build_types args, env) in
-      (x, fr) :: env
-
-
+      ((x, fr) :: env , mem)
+  | ASTVar (x,_) -> let (a, mem') = alloc mem in
+      if (mem' == (a, Z 0) :: mem) && (not (inDomain mem a)) then
+        ((x, A a) :: env, mem')
+      else failwith "Memory allocation failed"
+    
+  | ASTProc (x, args, bk) -> let p = P (bk, build_types args, env) in
+      ((x, p) :: env , mem)
+  | ASTProcRec (x, args, bk) -> let pr = PR (bk, x, build_types args, env) in
+      ((x, pr) :: env , mem)
+  
 (* instruction *)
-let eval_stat env outFlux s =
+let rec eval_stat env mem outFlux s =
   match s with 
-  | ASTEcho e -> let x= eval_expr env e in match x with 
-      | Z n -> n :: outFlux
-      | _ -> failwith "Expected an integer in echo statement"
+  | ASTEcho e -> let x= eval_expr env mem e in (match x with 
+      | Z n -> (mem, n :: outFlux)
+      | _ -> failwith "Expected an integer in echo statement")
+  | ASTSet (x, e) -> (match get_value env x with
+      | A a -> let v = eval_expr env mem e in
+          (update mem a v, outFlux)
+      | _ -> failwith "Expected a variable in set statement")
+  | ASTIfS (e, bk1, bk2) -> (match eval_expr env mem e with
+      | Z 1 -> eval_block env mem outFlux bk1
+      | Z 0 -> eval_block env mem outFlux bk2
+      | _ -> failwith "Expected a boolean value for if condition")
 
+  | ASTWhile (e, bk) -> (match eval_expr env mem e with
+      | Z 1 -> let (mem', outFlux') = eval_block env mem outFlux bk in
+          eval_stat env mem' outFlux' (ASTWhile (e, bk))
+      | Z 0 -> (mem, outFlux)
+      | _ -> failwith "Expected a boolean value for while condition")
+  
+  | ASTCall (x, exprs) -> (match get_value env x with
+      | P (bk, args, env') -> let vals = eval_exprs env mem exprs in
+              let new_env = ajout_list_env env' args vals in
+              eval_block new_env mem outFlux bk
+      | PR (bk, x, args, env') -> let vals = eval_exprs env mem exprs in
+              let new_env = ajout_list_env ((x, PR (bk, x, args, env')) :: env') args vals in
+              eval_block new_env mem outFlux bk
+      | _ -> failwith "Expected a procedure in call statement")
+          
 
 
 (* commandes *)
-let rec eval_cmds env outFlux cmds =
+and eval_cmds env mem outFlux cmds =
   match cmds with
-  | ASTStat s -> let finalOutFlux = eval_stat env outFlux s in List.rev finalOutFlux (* on l'inverse à la fin*)
-  | ASTDef (d, c) -> let new_env = eval_def env d in eval_cmds new_env outFlux c
- 
+  | ASTStat (s, c) -> let (mem', outFlux') = eval_stat env mem outFlux s in eval_cmds env mem' outFlux' c
+  | ASTDef (d, c) -> let (env', mem') = eval_def env mem d in eval_cmds env' mem' outFlux c
+  | ASTEnd s ->  let (a, finalOutFlux) = eval_stat env mem outFlux s in (a, List.rev finalOutFlux) (* on l'inverse à la fin*)
 
 
-
+(*block*)
+and eval_block env mem outFlux cmds =
+  eval_cmds env mem outFlux cmds
 
 
 (* programmes *)
 let eval_prog cmds =
-  eval_cmds [] [] cmds
+  eval_block [] [] [] cmds
 
 
-*)

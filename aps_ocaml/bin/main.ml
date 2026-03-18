@@ -1,7 +1,7 @@
 open Aps_syntax
 open PrologTerm
 open Manip_sys
-(* open Eval *)
+open Eval
 
 
 let print_prog () =
@@ -12,9 +12,9 @@ let print_prog () =
     let s = Format.flush_str_formatter () in
     Format.printf "==== Test du pretty printer de termes ====\n %s " s ;
     Format.printf "==== Test de la sémantique du programme ====\n" ;
-    (*let res = eval_prog p in
+    let (_, res) = eval_prog p in
     Format.printf "Résultat de l'exécution du programme : %s\n" (String.concat ", " (List.map string_of_int res)) ;
-    Format.printf "==== Test du typage du programme ====\n" ;*)
+    Format.printf "==== Test du typage du programme ====\n" ;
     match cmd_typ  s with
     | Ok(s,_) -> Format.printf "%s\n" s
     | Error (`Msg m) -> print_endline m 
