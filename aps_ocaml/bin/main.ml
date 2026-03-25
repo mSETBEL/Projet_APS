@@ -3,7 +3,6 @@ open PrologTerm
 open Manip_sys
 open Eval
 
-
 let print_prog () =
   let fname = Sys.argv.(1) in
   let p = get_prog fname in

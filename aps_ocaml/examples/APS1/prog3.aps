@@ -1,0 +1,8 @@
+[
+	VAR y int;
+	PROC x [x1:int] [
+		SET y x1;
+		ECHO y
+	];
+	CALL x 1
+]

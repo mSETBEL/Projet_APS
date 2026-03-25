@@ -14,28 +14,30 @@ type value =
     Z of int
   | F of closure
   | FR of recClosure
-  | A of address
+  | A of int
   | P of proClosure
   | PR of recProClosure
 and closure = expr * string list * env
 and recClosure = expr * string * string list * env
 and proClosure = cmds * string list * env 
 and recProClosure = cmds * string * string list * env
-and address = int
 and env = (string * value) list
+
+and espace = None | Some of value | Any
+and mem = (int * espace) list
 
 type outFlux = int list
 
 
 let alloc mem =
   let new_addr = List.length mem in
-  (new_addr, (new_addr, Z 0) :: mem)
+  (new_addr, (new_addr, Any) :: mem)
 
 let update mem a v =
-  List.map (fun (addr, value) -> if addr = a then (addr, v) else (addr, value)) mem
+  List.map (fun (addr, val') -> if addr = a then (addr, Some v) else (addr, val')) mem
 
 let inDomain mem a =
-  List.exists (fun (addr, _) -> addr = a) mem
+  List.exists (fun (addr, _) -> addr == a) mem
 
 let pi0 op =
   match op with
@@ -79,6 +81,10 @@ let rec ajout_list_env env args vals =
   | _ -> failwith "Mismatch between arguments and values"
 
 
+let find mem a =
+  match List.find_opt (fun (addr, _) -> addr = a) mem with
+  | Some (_, Some v) -> v
+  | _ -> failwith "Memory access error: address not found or uninitialized"
 
 (* expressions *)
 let rec eval_expr env mem exp =
@@ -87,7 +93,7 @@ let rec eval_expr env mem exp =
   | ASTNum n -> Z n 
 
   | ASTId x -> (match get_value env x with
-      | A a -> Z a
+      | A a -> (find mem a)
       | v -> v)
   
 
@@ -141,9 +147,10 @@ let eval_def env mem def =
   | ASTFunRec (x, _, args, e) -> let fr = FR (e, x, build_types args, env) in
       ((x, fr) :: env , mem)
   | ASTVar (x,_) -> let (a, mem') = alloc mem in
-      if (mem' == (a, Z 0) :: mem) && (not (inDomain mem a)) then
-        ((x, A a) :: env, mem')
-      else failwith "Memory allocation failed"
+    (match (inDomain mem a) with
+    | true -> failwith "Address already in use"
+    | false -> ((x, A a) :: env , mem'))
+    
     
   | ASTProc (x, args, bk) -> let p = P (bk, build_types args, env) in
       ((x, p) :: env , mem)
@@ -159,7 +166,7 @@ let rec eval_stat env mem outFlux s =
   | ASTSet (x, e) -> (match get_value env x with
       | A a -> let v = eval_expr env mem e in
           (update mem a v, outFlux)
-      | _ -> failwith "Expected a variable in set statement")
+      | _ -> failwith ("Expected a variable in set statement for "^x))
   | ASTIfS (e, bk1, bk2) -> (match eval_expr env mem e with
       | Z 1 -> eval_block env mem outFlux bk1
       | Z 0 -> eval_block env mem outFlux bk2
@@ -187,7 +194,7 @@ and eval_cmds env mem outFlux cmds =
   match cmds with
   | ASTStat (s, c) -> let (mem', outFlux') = eval_stat env mem outFlux s in eval_cmds env mem' outFlux' c
   | ASTDef (d, c) -> let (env', mem') = eval_def env mem d in eval_cmds env' mem' outFlux c
-  | ASTEnd s ->  let (a, finalOutFlux) = eval_stat env mem outFlux s in (a, List.rev finalOutFlux) (* on l'inverse à la fin*)
+  | ASTEnd s ->  let (a, finalOutFlux) = eval_stat env mem outFlux s in (a , finalOutFlux) 
 
 
 (*block*)
@@ -197,6 +204,6 @@ and eval_block env mem outFlux cmds =
 
 (* programmes *)
 let eval_prog cmds =
-  eval_block [] [] [] cmds
+  let (mem, outFlux) = eval_block [] [] [] cmds in (mem, List.rev outFlux)
 
 
