@@ -20,6 +20,10 @@ type typ =
 type arg =
   ASTArg of string * typ
 
+type argp = 
+    ASTArgp of string * typ
+  | ASTVarArgp of string * typ
+
 type expr =
     ASTNum of int
   | ASTId of string
@@ -29,20 +33,24 @@ type expr =
   | ASTApp of expr * expr list
   | ASTAbs of arg list * expr
 
+type exprp =
+    ASTAdr of string
+  | ASTExpr of expr
+
 type stat =
     ASTEcho of expr
   | ASTSet of string * expr
   | ASTIfS of expr * cmds * cmds
   | ASTWhile of expr * cmds
-  | ASTCall of string * expr list
+  | ASTCall of string * exprp list
 
 and def =
     ASTConst of string * typ * expr
   | ASTFun of string * typ * arg list * expr
   | ASTFunRec of string * typ * arg list * expr
   | ASTVar of string * typ
-  | ASTProc of string * arg list * cmds
-  | ASTProcRec of string * arg list * cmds
+  | ASTProc of string * argp list * cmds
+  | ASTProcRec of string * argp list * cmds
 
 and cmds =
     ASTEnd of stat

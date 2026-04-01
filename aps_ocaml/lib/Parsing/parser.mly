@@ -34,6 +34,8 @@ open Ast
 %token OR
 %token BOOL
 %token INT
+%token ADR
+%token VARP
 
 %token <int> NUM
 %token <string> IDENT
@@ -41,6 +43,7 @@ open Ast
 
 %type <Ast.expr> expr
 %type <Ast.expr list> exprs
+%type <Ast.exprp list> exprps
 %type <Ast.cmds> prog
 
 %start prog
@@ -62,7 +65,7 @@ stat:
   | SET IDENT expr       { ASTSet($2, $3) }
   | IFS expr block block         { ASTIfS($2, $3, $4) } 
   | WHILE expr block              { ASTWhile($2, $3) }
-  | CALL IDENT exprs              { ASTCall($2, $3) }
+  | CALL IDENT exprps              { ASTCall($2, $3) }
 ;
 
 def:
@@ -70,8 +73,8 @@ def:
 | FUN IDENT typ LBRA args RBRA expr  { ASTFun($2, $3, $5, $7) }
 | FUN REC IDENT typ LBRA args RBRA expr { ASTFunRec($3, $4, $6, $8) }
 | VAR IDENT typ { ASTVar($2, $3) }
-| PROC IDENT LBRA args RBRA block { ASTProc($2, $4, $6) }
-| PROC REC IDENT LBRA args RBRA block { ASTProcRec($3, $5, $7) }
+| PROC IDENT LBRA argps RBRA block { ASTProc($2, $4, $6) }
+| PROC REC IDENT LBRA argps RBRA block { ASTProcRec($3, $5, $7) }
 ;
 typ:
   BOOL { ASTBool }
@@ -103,8 +106,23 @@ args :
 | arg COMMA args { $1::$3 }
 ;
 
+argp :
+  IDENT COLON typ	{ ASTArgp($1, $3) }
+| VARP IDENT COLON typ { ASTVarArgp($2, $4) }
+;
+argps :
+  argp        { [$1] }
+
+exprp:
+  expr       { ASTExpr($1) }
+  | LPAR ADR IDENT RPAR { ASTAdr($3) }
+;
 exprs :
   expr       { [$1] }
 | expr exprs { $1::$2 }
+;
+exprps :
+  exprp       { [$1] }
+| exprp exprps { $1::$2 }
 ;
 

@@ -1,8 +1,9 @@
 [
-	PROC test [ f : ( int -> int ) , x :  int ]	[
-		SET x (f x)
+	PROC test [ f : ( int -> int ) , var x :  int ]	[
+		SET x (f x);
+		ECHO x
 	];
 	VAR y int;
 	SET y 3;
-	CALL test [x:int] (add x 9) y
+	CALL test adr [x:int] (add x 9) y
 ]
