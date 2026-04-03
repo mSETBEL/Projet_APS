@@ -1,7 +1,7 @@
 [
 	VAR x int;
 	SET x 42;
-	VAR x int;
+	
 	ECHO x
 
 ]

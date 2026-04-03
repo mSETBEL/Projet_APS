@@ -10,7 +10,7 @@ ctx_init(
 	[
 		(true,bool),
 		(false,bool),
-		(not,arrow((bool),(bool))),
+		(not,arrow([bool],bool)),
 		(eq,arrow([int,int],bool)),
 		(lt, arrow([int,int],bool)),
 		(add, arrow([int,int],int)),

@@ -1,4 +1,4 @@
-(*open Ast
+open Ast
 
 (* ========================================================================== *)
 (* == UPMC/master/info/4I506 -- Janvier 2016/2017/2018                     == *)
@@ -86,16 +86,26 @@ let find mem a =
   | Some (_, Some v) -> v
   | _ -> failwith "Memory access error: address not found or uninitialized"
 
+
+let rec build_vars argsp =
+  match argsp with
+  | [] -> []
+  | (ASTArgp (x, _)) :: rest -> x :: build_vars rest
+  | (ASTVarArgp (x, _)) :: rest -> x :: build_vars rest
+
 (* expressions *)
 let rec eval_expr env mem exp =
   match exp with
 
   | ASTNum n -> Z n 
 
-  | ASTId x -> (match get_value env x with
-      | A a -> (find mem a)
-      | v -> v)
-  
+  | ASTId x -> ( match x with 
+      |"true" -> Z 1
+      |"false" -> Z 0
+      | _ ->(match get_value env x with
+        | A a -> (find mem a)
+        | v -> v))
+    
 
   | ASTApp (ASTId "true", []) -> Z 1
   | ASTApp (ASTId "false", []) -> Z 0
@@ -152,10 +162,24 @@ let eval_def env mem def =
     | false -> ((x, A a) :: env , mem'))
     
     
-  | ASTProc (x, args, bk) -> let p = P (bk, build_types args, env) in
+  | ASTProc (x, argsp, bk) -> let p = P (bk, build_vars argsp, env) in
       ((x, p) :: env , mem)
-  | ASTProcRec (x, args, bk) -> let pr = PR (bk, x, build_types args, env) in
+  | ASTProcRec (x, argsp, bk) -> let pr = PR (bk, x, build_vars argsp, env) in
       ((x, pr) :: env , mem)
+  
+
+(* paramètres d'appel*)
+let eval_expar env mem expar =
+  match expar with
+  | ASTAdr x -> (match get_value env x with
+      | A a -> A a
+      | _ -> failwith ("Expected a variable for address argument "^x))
+  | ASTExpr e -> eval_expr env mem e
+
+let rec eval_expars env mem expars =
+  match expars with
+  | [] -> []
+  | e :: rest -> eval_expar env mem e :: eval_expars env mem rest
   
 (* instruction *)
 let rec eval_stat env mem outFlux s =
@@ -179,10 +203,10 @@ let rec eval_stat env mem outFlux s =
       | _ -> failwith "Expected a boolean value for while condition")
   
   | ASTCall (x, exprs) -> (match get_value env x with
-      | P (bk, args, env') -> let vals = eval_exprs env mem exprs in
+      | P (bk, args, env') -> let vals = eval_expars env mem exprs in
               let new_env = ajout_list_env env' args vals in
               eval_block new_env mem outFlux bk
-      | PR (bk, x, args, env') -> let vals = eval_exprs env mem exprs in
+      | PR (bk, x, args, env') -> let vals = eval_expars env mem exprs in
               let new_env = ajout_list_env ((x, PR (bk, x, args, env')) :: env') args vals in
               eval_block new_env mem outFlux bk
       | _ -> failwith "Expected a procedure in call statement")
@@ -207,4 +231,3 @@ let eval_prog cmds =
   let (mem, outFlux) = eval_block [] [] [] cmds in (mem, List.rev outFlux)
 
 
-*)

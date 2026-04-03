@@ -1,0 +1,8 @@
+[
+FUN REC sum int [n : int] ( 
+	if (eq n 1) 
+		1 
+		(add n (sum (sub n 1)) )
+	);
+ECHO (sum 3)
+]

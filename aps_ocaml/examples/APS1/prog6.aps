@@ -1,0 +1,3 @@
+[ FUN r int [y:int, w:int](add w y);
+CONST x int 5 ;
+ECHO (r x 3) ] 
