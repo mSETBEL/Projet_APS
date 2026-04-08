@@ -31,7 +31,7 @@ a([], []).
 a([(var(X),T)|Ls], [arg(X,ref(T))|ARGS]) :-
     a(Ls, ARGS).
 
-a([(X,T)|Ls], [arg(X,T)|ARGS]) :-
+a([arg(X,T)|Ls], [arg(X,T)|ARGS]) :-
     a(Ls, ARGS).
 
 %Blocks

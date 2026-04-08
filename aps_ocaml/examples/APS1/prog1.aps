@@ -1,8 +1,8 @@
 [
-	PROC test [ f : ( int -> int ) , x :  int ]	[
+	PROC test [ f : ( int -> int ) , var x :  int ]	[
 		SET x (f x)
 	];
 	VAR y int;
 	SET y 3;
-	CALL test [x:int] (add x 9) y
+	CALL test [x:int] (add x 9) (adr y)
 ]

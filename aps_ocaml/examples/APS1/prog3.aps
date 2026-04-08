@@ -1,6 +1,6 @@
 [
 	VAR y int;
-	PROC x [ var x1:int] [
+	PROC x [var x1:int] [
 		SET y x1;
 		ECHO y
 	];

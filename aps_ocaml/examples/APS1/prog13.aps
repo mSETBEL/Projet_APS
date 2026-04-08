@@ -1,6 +1,6 @@
 [
   VAR x int;
-  PROC REC incr [var n:int]
+  PROC REC incr [n:int]
     [
       IF (lt x 42)
         [
@@ -12,8 +12,6 @@
     ];
   SET x 10;
   ECHO x;
-
-  VAR y int;
-  SET y 2;
-  CALL incr (adr y)
+  
+  CALL incr 2
 ]
