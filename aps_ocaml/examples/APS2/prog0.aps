@@ -1,0 +1,9 @@
+[	
+	VAR i int ;
+	SET i 0;
+	WHILE ( lt i 5)[
+		SET i ( add i 1);
+		ECHO i
+	]
+
+]

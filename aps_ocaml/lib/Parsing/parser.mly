@@ -36,6 +36,11 @@ open Ast
 %token INT
 %token ADR
 %token VARP
+%token ALLOC
+%token LEN
+%token NTH
+%token VSET
+%token VEC
 
 %token <int> NUM
 %token <string> IDENT
@@ -60,9 +65,13 @@ cmds:
 | stat SEMICOLON cmds   { ASTStat($1, $3) }
 ;
 
+lval: 
+  IDENT                 { ASTLId $1 }
+| LPAR NTH lval expr RPAR     { ASTNth($3, $4) }
+
 stat:
   ECHO expr             { ASTEcho($2) }
-  | SET IDENT expr       { ASTSet($2, $3) }
+  | SET lval expr       { ASTSet($2, $3) }
   | IFS expr block block         { ASTIfS($2, $3, $4) } 
   | WHILE expr block              { ASTWhile($2, $3) }
   | CALL IDENT exprps              { ASTCall($2, $3) }
@@ -79,6 +88,7 @@ def:
 typ:
   BOOL { ASTBool }
 | INT  { ASTInt }
+| LPAR VEC typ RPAR   { ASTVec $3 } 
 | LPAR typs ARROW typ RPAR  { ASTTyps ($2, $4) }
 
 typs:
@@ -94,6 +104,11 @@ expr:
 | LPAR OR expr expr RPAR	{ ASTOr($3, $4) }
 | LPAR expr exprs RPAR  { ASTApp($2, $3) }
 | LBRA args RBRA expr	{ ASTAbs($2, $4) }
+| LPAR ALLOC expr RPAR    { ASTAlloc $3 }
+| LPAR LEN expr RPAR      { ASTLen $3 }
+| LPAR NTH expr expr RPAR   { ASTNthE($3,$4) }
+| LPAR VSET expr expr expr RPAR  {ASTVset($3, $4, $5) }
+
 
 ;
 arg:

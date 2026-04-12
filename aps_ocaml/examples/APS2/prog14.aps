@@ -1,0 +1,6 @@
+[
+	
+	VAR t ( vec int );
+	SET t ( alloc 3 )
+	
+]

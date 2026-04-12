@@ -46,14 +46,14 @@ type_cmds(G,dec(D,CS),void) :- type_def(G,D,G1), type_cmds(G1,CS,void). %defs
 type_def(G,const(X,T,E),[(X,T)|G]) :- type_expr(G,E,T). %const
 type_def(G,fun(X,T,ARGS,E),[(X,arrow(TARGS,T))|G]) :- add_args_ctx(G,ARGS,G1), build_types(ARGS,TARGS), type_expr(G1,E,T). %fun
 type_def(G,funrec(X,T,ARGS,E),[(X,arrow(TARGS,T))|G]) :- build_types(ARGS,TARGS), add_args_ctx(G,[arg(X,arrow(TARGS,T))],G1), add_args_ctx(G1,ARGS,G2), type_expr(G2,E,T). %fun_rec
-type_def(G, var(X,int),[(X,ref(int))|G]). %var
-type_def(G, var(X,bool),[(X,ref(bool))|G]).
+type_def(G, var(X,T),[(X,ref(T))|G]). %var
+
 type_def(G, proc(X,PARGS,BK),[(X,arrow(TARGS,void))|G]) :- a(PARGS,ARGS), build_types(ARGS,TARGS), add_args_ctx(G,ARGS,G1), type_block(G1,BK,void). %proc
 type_def(G, procrec(X,PARGS,BK),[(X,arrow(TARGS,void))|G]) :- a(PARGS,ARGS), build_types(ARGS,TARGS), add_args_ctx(G,[arg(X,arrow(TARGS,void))],G1), add_args_ctx(G1,ARGS,G2), type_block(G2,BK,void). %proc_rec
 
 %instructions
 type_stat(G, echo(E), void) :- type_expr(G, E, int). %echo
-type_stat(G, set(X,E), void) :- find(G,X,ref(T)), type_expr(G,E,T). %set
+type_stat(G, set(LV,E), void) :- type_expr(G, LV, T), type_expr(G, E, T) . %set
 type_stat(G, ifS(E,BK1,BK2), void) :- type_expr(G,E,bool), type_block(G,BK1,void), type_block(G,BK2,void). %ifS
 type_stat(G, while(E,BK), void) :- type_expr(G,E,bool), type_block(G,BK,void). %while
 type_stat(G, call(X,ES), void) :- type_expars(G,ES,TS), find(G,X,arrow(TS,void)). %call
@@ -67,6 +67,11 @@ type_expr(G, and(E1, E2), bool) :- type_expr(G,E1,bool), type_expr(G,E2,bool). %
 type_expr(G, or(E1, E2), bool) :- type_expr(G,E1,bool), type_expr(G,E2,bool). %or
 type_expr(G, app(E,ENS), T) :-  type_expr(G,E,arrow(TENS,T)), type_exprs(G,ENS,TENS). %app
 type_expr(G, abs(ARGS,E), arrow(TARGS,T)) :- add_args_ctx(G,ARGS,G1), build_types(ARGS,TARGS), type_expr(G1,E,T). %abs
+type_expr(G, alloc(E), vec(_)) :- type_expr(G, E, int). %alloc
+type_expr(G, nth(E1, E2), T) :- type_expr(G, E1, vec(T)), type_expr(G, E2, int). %nth
+type_expr(G, len(E), int) :- type_expr(G,E, vec(_)). %len
+type_expr(G, vset(E1, E2, E3), vec(T)) :- type_expr(G, E1, vec(T)), type_expr(G, E2, int), type_expr(G, E3, T). %vset
+
 
 type_exprs(_,[],[]).
 type_exprs(G,[E|ES],[T|TS]) :- type_expr(G,E,T), type_exprs(G,ES,TS).

@@ -13,7 +13,7 @@ let print_prog () =
     Format.printf "==== Test de la sémantique du programme ====\n" ;
     let (_, res) = eval_prog p in
     Format.printf "Résultat de l'exécution du programme : %s\n" (String.concat ", " (List.map string_of_int res)) ; 
-    Format.printf "==== Test du typage du programme ====\n" ;
+    Format.printf "==== Test du typage du programme ====\n" ; 
     match cmd_typ  s with
     | Ok(s,_) -> Format.printf "%s\n" s
     | Error (`Msg m) -> print_endline m 

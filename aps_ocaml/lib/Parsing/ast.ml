@@ -14,6 +14,7 @@
 type typ = 
     ASTBool
   | ASTInt
+  | ASTVec of typ
   | ASTTyps of typ list * typ
 
 
@@ -32,14 +33,24 @@ type expr =
   | ASTOr of expr *expr
   | ASTApp of expr * expr list
   | ASTAbs of arg list * expr
+  | ASTAlloc of expr
+  | ASTLen of expr
+  | ASTNthE of expr * expr
+  | ASTVset of expr * expr * expr
 
 type exprp =
     ASTAdr of string
   | ASTExpr of expr
 
+
+type lval =
+    ASTLId of string
+  | ASTNth of lval * expr
+
+
 type stat =
     ASTEcho of expr
-  | ASTSet of string * expr
+  | ASTSet of lval * expr
   | ASTIfS of expr * cmds * cmds
   | ASTWhile of expr * cmds
   | ASTCall of string * exprp list
