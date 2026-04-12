@@ -1,6 +1,7 @@
 [
 	
 	VAR t ( vec int );
-	SET t ( alloc 3 )
+	SET t ( alloc 3 );
+	ECHO (len t)
 	
 ]
