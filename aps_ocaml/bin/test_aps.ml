@@ -1,7 +1,7 @@
 open Aps_syntax.Manip_sys
 open Aps_syntax.PrologTerm
 
-let l_test_0 = [(testfile_name 1 10, "OK")]
+let l_test_0 = [(testfile_name 2 18, "OK")]
 
 
 

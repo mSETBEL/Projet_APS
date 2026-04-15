@@ -242,6 +242,11 @@ and eval_lval env mem lval =
       | B (a, _) -> (match eval_expr env mem e with
           |(Z i, mem') -> (a + i, mem')
           | _ -> failwith ("Expected an integer for nth expression "^x))
+      | A addr -> (match eval_expr env mem e with (*si le tableau a été initialisé avec un VAR/SET, alors il est stocké en tant qu'adresse vers un tableau*)
+          |(Z i, mem') -> (match find mem' addr with
+              | B (a, _) -> (a + i, mem')
+              | _ -> failwith ("Expected a vector variable for lvalue "^x))
+          | _ -> failwith ("Expected an integer for nth expression "^x))
       | _ -> failwith ("Expected a vector variable for lvalue "^x))
   | ASTNth (lv, e) -> let (a, mem') = eval_lval env mem lv in
       (match find mem' a with

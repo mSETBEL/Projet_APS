@@ -127,7 +127,8 @@ argp :
 ;
 argps :
   argp        { [$1] }
-
+  | argp COMMA argps { $1::$3 }
+;
 exprp:
   expr       { ASTExpr($1) }
   | LPAR ADR IDENT RPAR { ASTAdr($3) }

@@ -1,0 +1,13 @@
+[
+	CONST s int 3;
+	CONST t (vec int) ( alloc s );
+	VAR t2 ( vec int);
+	SET t2 ( alloc s );
+	VAR c int ;
+	SET c 0;
+	WHILE ( lt c ( sub s 1))
+	[
+		SET ( nth t2 c ) c ;
+		SET c ( add c 1)
+	]
+]

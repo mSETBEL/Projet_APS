@@ -40,7 +40,7 @@ and pp_type fmt t =
     ASTBool -> fprintf fmt "bool"
   | ASTInt -> fprintf fmt "int"
   | ASTVec t  -> fprintf fmt "vec(%a)" pp_type t
-  | ASTTyps(tys, ty) -> fprintf fmt "types([%a],%a)" pp_types tys pp_type ty
+  | ASTTyps(tys, ty) -> fprintf fmt "arrow([%a],%a)" pp_types tys pp_type ty
 
 and pp_types fmt tys = pp_lst_cma pp_type fmt tys
 
