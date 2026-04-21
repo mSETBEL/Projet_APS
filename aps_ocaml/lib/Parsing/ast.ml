@@ -57,8 +57,8 @@ type stat =
 
 and def =
     ASTConst of string * typ * expr
-  | ASTFun of string * typ * arg list * expr
-  | ASTFunRec of string * typ * arg list * expr
+  | ASTFun of string * typ * arg list * cmds
+  | ASTFunRec of string * typ * arg list * cmds
   | ASTVar of string * typ
   | ASTProc of string * argp list * cmds
   | ASTProcRec of string * argp list * cmds
@@ -67,3 +67,7 @@ and cmds =
     ASTEnd of stat
   | ASTDef of def * cmds
   | ASTStat of stat * cmds
+  | ASTRet of ret
+
+and ret = 
+    ASTReturn of expr

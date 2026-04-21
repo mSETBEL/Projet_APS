@@ -54,6 +54,11 @@ let rec pp_cmds fmt c =
   ASTEnd s -> fprintf fmt "end(%a)" pp_stat s
   |ASTDef(d, cs) -> fprintf fmt "dec(%a,%a)" pp_def d pp_cmds cs
   |ASTStat(s, cs) -> fprintf fmt "stat(%a,%a)" pp_stat s pp_cmds cs
+  | ASTRet r -> fprintf fmt "ret(%a)" pp_ret r
+
+and pp_ret fmt r =
+  match r with
+    ASTReturn e -> fprintf fmt "%a" pp_expr e
 
 and pp_stat fmt s =
   match s with
@@ -74,10 +79,10 @@ and pp_def fmt s =
   match s with
   ASTConst (name, ty, e) ->
     fprintf fmt "const(%s,%a,%a)" name pp_type ty pp_expr e
-  | ASTFun (name, ty, args, e) ->
-    fprintf fmt "fun(%s,%a,[%a],%a)" name pp_type ty pp_args args pp_expr e
-  | ASTFunRec (name, ty, args, e) ->
-    fprintf fmt "funrec(%s,%a,[%a],%a)" name pp_type ty pp_args args pp_expr e
+  | ASTFun (name, ty, args, cs) ->
+    fprintf fmt "fun(%s,%a,[%a],block(%a))" name pp_type ty pp_args args pp_cmds cs
+  | ASTFunRec (name, ty, args, cs) ->
+    fprintf fmt "funrec(%s,%a,[%a],block(%a))" name pp_type ty pp_args args pp_cmds cs
   |  ASTVar (name, ty) ->
     fprintf fmt "var(%s,%a)" name pp_type ty
   | ASTProc (name, args, bk) -> 

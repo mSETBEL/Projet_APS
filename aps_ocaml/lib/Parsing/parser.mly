@@ -41,6 +41,7 @@ open Ast
 %token NTH
 %token VSET
 %token VEC
+%token RET
 
 %token <int> NUM
 %token <string> IDENT
@@ -63,6 +64,11 @@ cmds:
   stat                  { ASTEnd $1 }
 | def SEMICOLON cmds    { ASTDef($1, $3) }
 | stat SEMICOLON cmds   { ASTStat($1, $3) }
+| ret                   { ASTRet $1 } 
+;
+
+ret:
+  RET expr { ASTReturn $2 }
 ;
 
 lval: 
@@ -79,8 +85,8 @@ stat:
 
 def:
   CONST IDENT typ expr  { ASTConst($2, $3, $4) }
-| FUN IDENT typ LBRA args RBRA expr  { ASTFun($2, $3, $5, $7) }
-| FUN REC IDENT typ LBRA args RBRA expr { ASTFunRec($3, $4, $6, $8) }
+| FUN IDENT typ LBRA args RBRA LBRA cmds RBRA  { ASTFun($2, $3, $5, $8) }
+| FUN REC IDENT typ LBRA args RBRA LBRA cmds RBRA { ASTFunRec($3, $4, $6, $9) }
 | VAR IDENT typ { ASTVar($2, $3) }
 | PROC IDENT LBRA argps RBRA block { ASTProc($2, $4, $6) }
 | PROC REC IDENT LBRA argps RBRA block { ASTProcRec($3, $5, $7) }
