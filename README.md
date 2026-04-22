@@ -1,4 +1,5 @@
-APS2 fini et testé, je n'ai pas eu le temps de travailler sur APS3.
+APS2 fini et testé, je l'ai mis en ZIP dans le répertoire aps_ocaml
+Je n'ai pas eu le temps de travailler sur APS3.
 
 Dans APS3: j'ai commencé la syntaxe et le typage, le typage n'est pas fonctionnel malgré que j'ai suivi les notes du cours.
 
