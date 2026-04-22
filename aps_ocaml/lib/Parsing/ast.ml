@@ -14,11 +14,16 @@
 type typ = 
     ASTBool
   | ASTInt
+  | ASTVec of typ
   | ASTTyps of typ list * typ
 
 
 type arg =
   ASTArg of string * typ
+
+type argp = 
+    ASTArgp of string * typ
+  | ASTVarArgp of string * typ
 
 type expr =
     ASTNum of int
@@ -28,15 +33,41 @@ type expr =
   | ASTOr of expr *expr
   | ASTApp of expr * expr list
   | ASTAbs of arg list * expr
+  | ASTAlloc of expr
+  | ASTLen of expr
+  | ASTNthE of expr * expr
+  | ASTVset of expr * expr * expr
+
+type exprp =
+    ASTAdr of string
+  | ASTExpr of expr
+
+
+type lval =
+    ASTLId of string
+  | ASTNth of lval * expr
+
 
 type stat =
     ASTEcho of expr
+  | ASTSet of lval * expr
+  | ASTIfS of expr * cmds * cmds
+  | ASTWhile of expr * cmds
+  | ASTCall of string * exprp list
 
-type def =
+and def =
     ASTConst of string * typ * expr
-  | ASTFun of string * typ * arg list * expr
-  | ASTFunRec of string * typ * arg list * expr
+  | ASTFun of string * typ * arg list * cmds
+  | ASTFunRec of string * typ * arg list * cmds
+  | ASTVar of string * typ
+  | ASTProc of string * argp list * cmds
+  | ASTProcRec of string * argp list * cmds
 
-type cmds =
-    ASTStat of stat
+and cmds =
+    ASTEnd of stat
   | ASTDef of def * cmds
+  | ASTStat of stat * cmds
+  | ASTRet of ret
+
+and ret = 
+    ASTReturn of expr

@@ -22,12 +22,26 @@ open Ast
 %token CONST
 %token FUN
 %token REC
+%token VAR
+%token PROC
 %token ECHO
+%token SET
+%token IFS
+%token WHILE
+%token CALL
 %token IF
 %token AND
 %token OR
 %token BOOL
 %token INT
+%token ADR
+%token VARP
+%token ALLOC
+%token LEN
+%token NTH
+%token VSET
+%token VEC
+%token RET
 
 %token <int> NUM
 %token <string> IDENT
@@ -35,31 +49,52 @@ open Ast
 
 %type <Ast.expr> expr
 %type <Ast.expr list> exprs
+%type <Ast.exprp list> exprps
 %type <Ast.cmds> prog
 
 %start prog
 
 %%
-prog: LBRA cmds RBRA    { $2 }
+prog: block { $1 }
+
+block: LBRA cmds RBRA    { $2 }
 ;
 
 cmds:
-  stat                  { ASTStat $1 }
+  stat                  { ASTEnd $1 }
 | def SEMICOLON cmds    { ASTDef($1, $3) }
+| stat SEMICOLON cmds   { ASTStat($1, $3) }
+| ret                   { ASTRet $1 } 
 ;
+
+ret:
+  RET expr { ASTReturn $2 }
+;
+
+lval: 
+  IDENT                 { ASTLId $1 }
+| LPAR NTH lval expr RPAR     { ASTNth($3, $4) }
 
 stat:
   ECHO expr             { ASTEcho($2) }
+  | SET lval expr       { ASTSet($2, $3) }
+  | IFS expr block block         { ASTIfS($2, $3, $4) } 
+  | WHILE expr block              { ASTWhile($2, $3) }
+  | CALL IDENT exprps              { ASTCall($2, $3) }
 ;
 
 def:
   CONST IDENT typ expr  { ASTConst($2, $3, $4) }
-| FUN IDENT typ LBRA args RBRA expr  { ASTFun($2, $3, $5, $7) }
-| FUN REC IDENT typ LBRA args RBRA expr { ASTFunRec($3, $4, $6, $8) }
+| FUN IDENT typ LBRA args RBRA LBRA cmds RBRA  { ASTFun($2, $3, $5, $8) }
+| FUN REC IDENT typ LBRA args RBRA LBRA cmds RBRA { ASTFunRec($3, $4, $6, $9) }
+| VAR IDENT typ { ASTVar($2, $3) }
+| PROC IDENT LBRA argps RBRA block { ASTProc($2, $4, $6) }
+| PROC REC IDENT LBRA argps RBRA block { ASTProcRec($3, $5, $7) }
 ;
 typ:
   BOOL { ASTBool }
 | INT  { ASTInt }
+| LPAR VEC typ RPAR   { ASTVec $3 } 
 | LPAR typs ARROW typ RPAR  { ASTTyps ($2, $4) }
 
 typs:
@@ -75,6 +110,11 @@ expr:
 | LPAR OR expr expr RPAR	{ ASTOr($3, $4) }
 | LPAR expr exprs RPAR  { ASTApp($2, $3) }
 | LBRA args RBRA expr	{ ASTAbs($2, $4) }
+| LPAR ALLOC expr RPAR    { ASTAlloc $3 }
+| LPAR LEN expr RPAR      { ASTLen $3 }
+| LPAR NTH expr expr RPAR   { ASTNthE($3,$4) }
+| LPAR VSET expr expr expr RPAR  {ASTVset($3, $4, $5) }
+
 
 ;
 arg:
@@ -87,8 +127,24 @@ args :
 | arg COMMA args { $1::$3 }
 ;
 
+argp :
+  IDENT COLON typ	{ ASTArgp($1, $3) }
+| VARP IDENT COLON typ { ASTVarArgp($2, $4) }
+;
+argps :
+  argp        { [$1] }
+  | argp COMMA argps { $1::$3 }
+;
+exprp:
+  expr       { ASTExpr($1) }
+  | LPAR ADR IDENT RPAR { ASTAdr($3) }
+;
 exprs :
   expr       { [$1] }
 | expr exprs { $1::$2 }
+;
+exprps :
+  exprp       { [$1] }
+| exprp exprps { $1::$2 }
 ;
 

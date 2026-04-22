@@ -1,0 +1,4 @@
+[
+	IF true [ RETURN true ] [ SET x (add x 1) ];
+	RETURN false
+]	

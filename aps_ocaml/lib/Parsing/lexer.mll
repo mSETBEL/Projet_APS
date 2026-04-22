@@ -25,12 +25,26 @@ rule token = parse
   | "CONST"          { CONST }
   | "FUN"            { FUN }
   | "REC"            { REC }
+  | "VAR"            { VAR }
+  | "PROC"           { PROC }
   | "ECHO"           { ECHO }
+  | "SET"            { SET }
+  | "IF"             { IFS }
+  | "WHILE"          { WHILE }
+  | "CALL"           { CALL }
   | "if"             { IF }   
   | "and"            { AND }
   | "or"             { OR }
   | "bool"           { BOOL }
   | "int"            { INT }  
+  | "var"            { VARP }
+  | "adr"            { ADR }
+  | "alloc"          { ALLOC }
+  | "len"            { LEN }
+  | "nth"            { NTH }
+  | "vset"           { VSET }
+  | "vec"            { VEC }
+  | "RETURN"         { RET }
   | ['0'-'9']+('.'['0'-'9'])? as lxm { NUM(int_of_string lxm) }
   | ['a'-'z']['a'-'z''A'-'Z''0'-'9']* as lxm { IDENT(lxm) }
   | eof              { raise Eof }

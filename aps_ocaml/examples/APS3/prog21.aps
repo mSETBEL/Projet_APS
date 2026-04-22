@@ -1,0 +1,4 @@
+[
+  FUN test int [x:int] [ RETURN x ];
+  ECHO (test 0)
+]
