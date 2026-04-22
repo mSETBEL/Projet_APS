@@ -1,4 +1,4 @@
 [
-  FUN f int [x:int] [ RETURN x ];
-  ECHO (f 42)
+  FUN test int [x:int] [ RETURN x ];
+  ECHO (test 0)
 ]

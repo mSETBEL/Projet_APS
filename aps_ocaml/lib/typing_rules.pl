@@ -1,10 +1,10 @@
 
 main :- read(user_input, X), type_check(X).
 
-type_check(prog(P)) :- type_prog(prog(P),void), write("OK\n").
+type_check(prog(P)) :- type_prog(prog(P),_), write("OK\n").
 type_check(_) :- write("KO\n").
 
-type_prog(prog(BK),void) :- ctx_init(G), type_block(G,BK, void). %prog
+type_prog(prog(BK),T) :- ctx_init(G), type_block(G,BK, T). %prog
 
 ctx_init(
 	[
